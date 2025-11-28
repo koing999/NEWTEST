@@ -1,0 +1,1234 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>투자 경제성 분석 대시보드 PRO Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Noto Sans KR', sans-serif; }
+        body { background: #0f172a; color: #e2e8f0; }
+        
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white; color: black; }
+        }
+        
+        .sensitivity-table {
+            font-size: 11px;
+            border-collapse: collapse;
+        }
+        
+        .sensitivity-table th, .sensitivity-table td {
+            padding: 6px 10px;
+            border: 1px solid #334155;
+            text-align: center;
+        }
+        
+        .sensitivity-positive { background: rgba(34, 197, 94, 0.2); color: #4ade80; }
+        .sensitivity-negative { background: rgba(239, 68, 68, 0.2); color: #f87171; }
+        
+        /* 차트 컨테이너 고정 높이 */
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+        
+        .chart-container-small {
+            position: relative;
+            height: 250px;
+            width: 100%;
+        }
+        
+        /* 테이블 스크롤 */
+        .table-scroll {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        /* 스크롤바 스타일 */
+        .table-scroll::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .table-scroll::-webkit-scrollbar-track {
+            background: #1e293b;
+            border-radius: 4px;
+        }
+        
+        .table-scroll::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 4px;
+        }
+        
+        .table-scroll::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+    </style>
+</head>
+<body class="p-6">
+    <div class="max-w-[1800px] mx-auto">
+        <!-- 헤더 -->
+        <div class="flex justify-between items-center mb-6 no-print">
+            <h1 class="text-3xl font-bold text-blue-400">💼 투자 경제성 분석 PRO Edition</h1>
+            <div class="flex gap-3">
+                <button onclick="toggleDarkMode()" class="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition">
+                    <i class="fas fa-moon"></i> 다크모드
+                </button>
+                <button onclick="downloadTemplate()" class="px-4 py-2 bg-green-600 hover:bg-green-500 rounded-lg transition">
+                    <i class="fas fa-download"></i> 템플릿
+                </button>
+                <button onclick="downloadExcel()" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg transition">
+                    <i class="fas fa-file-excel"></i> 엑셀
+                </button>
+                <button onclick="window.print()" class="px-4 py-2 bg-purple-600 hover:bg-purple-500 rounded-lg transition">
+                    <i class="fas fa-file-pdf"></i> PDF
+                </button>
+                <button onclick="shareResults()" class="px-4 py-2 bg-pink-600 hover:bg-pink-500 rounded-lg transition">
+                    <i class="fas fa-share-alt"></i> 공유
+                </button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-12 gap-6">
+            <!-- 왼쪽 입력 패널 -->
+            <div class="col-span-5 space-y-4">
+                
+                <!-- 프로젝트 관리 -->
+                <div class="bg-gray-800 p-4 rounded-xl border border-gray-700">
+                    <h2 class="text-lg font-semibold mb-3 text-blue-300">📁 프로젝트 관리</h2>
+                    <div class="flex gap-2">
+                        <input type="text" id="project-name" placeholder="프로젝트명 입력" class="flex-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:border-blue-500">
+                        <button onclick="saveProject()" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg transition">저장</button>
+                        <button onclick="loadProject()" class="px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded-lg transition">불러오기</button>
+                    </div>
+                </div>
+
+                <!-- 탭 네비게이션 -->
+                <div class="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
+                    <div class="flex border-b border-gray-700">
+                        <button onclick="switchTab('basic')" id="tab-basic" class="flex-1 px-4 py-3 bg-blue-600 text-white font-semibold transition text-sm">
+                            📊 기본 설정
+                        </button>
+                        <button onclick="switchTab('wacc')" id="tab-wacc" class="flex-1 px-4 py-3 bg-gray-700 hover:bg-gray-600 transition text-sm">
+                            🧮 WACC
+                        </button>
+                        <button onclick="switchTab('scenario')" id="tab-scenario" class="flex-1 px-4 py-3 bg-gray-700 hover:bg-gray-600 transition text-sm">
+                            🎭 시나리오
+                        </button>
+                    </div>
+                    
+                    <!-- 탭 내용 -->
+                    <div class="p-4">
+                        <!-- 기본 설정 탭 -->
+                        <div id="content-basic" class="space-y-3">
+                            <!-- 엑셀 업로드 -->
+                            <div>
+                                <h3 class="text-sm font-semibold mb-2 text-green-300">📊 매출 데이터 업로드</h3>
+                                <input type="file" id="excel-upload" accept=".xlsx, .xls" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-sm" onchange="handleExcelUpload(event)">
+                                <p class="text-xs text-gray-400 mt-1">* 엑셀 파일에서 매출 데이터를 자동으로 읽어옵니다</p>
+                            </div>
+
+                            <!-- CAGR 기반 매출 생성 -->
+                            <div>
+                                <h3 class="text-sm font-semibold mb-2 text-yellow-300">📈 CAGR 기반 매출 생성</h3>
+                                <div class="grid grid-cols-2 gap-2 mb-2">
+                                    <div>
+                                        <label class="text-xs text-gray-300">초기 매출 (억원)</label>
+                                        <input type="number" id="initial-revenue" value="100" class="w-full px-2 py-1 bg-gray-700 border border-gray-600 rounded-lg mt-1 text-sm">
+                                    </div>
+                                    <div>
+                                        <label class="text-xs text-gray-300">CAGR (%)</label>
+                                        <input type="number" id="cagr" value="15" step="0.1" class="w-full px-2 py-1 bg-gray-700 border border-gray-600 rounded-lg mt-1 text-sm">
+                                    </div>
+                                </div>
+                                <button onclick="generateRevenue()" class="w-full px-3 py-2 bg-yellow-600 hover:bg-yellow-500 rounded-lg transition text-sm">매출 자동 생성</button>
+                            </div>
+
+                            <!-- 기본 가정 -->
+                            <div>
+                                <h3 class="text-sm font-semibold mb-2 text-purple-300">⚙️ 기본 가정</h3>
+                                <div class="space-y-2">
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <div>
+                                            <label class="text-xs text-gray-300">초기 투자금 (억원)</label>
+                                            <input type="number" id="initial_investment" value="500" class="w-full px-2 py-1.5 bg-gray-700 border border-gray-600 rounded-lg mt-1 text-sm">
+                                        </div>
+                                        <div>
+                                            <label class="text-xs text-gray-300">내용연수 (년)</label>
+                                            <input type="number" id="useful_life" value="10" class="w-full px-2 py-1.5 bg-gray-700 border border-gray-600 rounded-lg mt-1 text-sm">
+                                        </div>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <div>
+                                            <label class="text-xs text-gray-300">분석 기간 (년)</label>
+                                            <input type="number" id="analysis_period" value="10" min="1" max="20" class="w-full px-2 py-1.5 bg-gray-700 border border-gray-600 rounded-lg mt-1 text-sm">
+                                        </div>
+                                        <div>
+                                            <label class="text-xs text-gray-300">법인세율 (%)</label>
+                                            <input type="number" id="tax_rate" value="25" class="w-full px-2 py-1.5 bg-gray-700 border border-gray-600 rounded-lg mt-1 text-sm">
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="text-xs text-gray-300">운전자본 비율 (매출 대비 %)</label>
+                                        <input type="number" id="nwc_rate" value="10" step="0.1" class="w-full px-2 py-1.5 bg-gray-700 border border-gray-600 rounded-lg mt-1 text-sm">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- WACC 탭 -->
+                        <div id="content-wacc" class="space-y-3 hidden">
+                            <!-- 산업별 빠른 적용 -->
+                            <div class="p-3 bg-gray-700 rounded-lg">
+                                <label class="text-xs text-gray-300 block mb-2 font-semibold">산업별 빠른 적용</label>
+                                <select id="industry-preset" class="w-full px-2 py-1.5 bg-gray-600 border border-gray-500 rounded-lg text-sm" onchange="applyIndustryPreset()">
+                                    <option value="">-- 선택 --</option>
+                                    <option value="it">IT/소프트웨어 (WACC ~8%)</option>
+                                    <option value="manufacturing">제조업 (WACC ~10%)</option>
+                                    <option value="retail">유통/소매 (WACC ~9%)</option>
+                                    <option value="healthcare">헬스케어 (WACC ~7%)</option>
+                                    <option value="construction">건설 (WACC ~11%)</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="text-xs text-gray-300">할인율 (WACC) (%)</label>
+                                <input type="number" id="discount_rate" value="10" step="0.1" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg mt-1">
+                            </div>
+                            
+                            <!-- WACC 수동 계산 -->
+                            <div class="bg-gray-700 p-3 rounded-lg space-y-2">
+                                <h4 class="text-sm font-semibold text-blue-300">📐 WACC 직접 계산</h4>
+                                
+                                <div class="grid grid-cols-2 gap-2">
+                                    <div>
+                                        <label class="text-xs text-gray-400">부채비중 D/(D+E) (%)</label>
+                                        <input type="number" id="debt-weight" value="30" class="w-full px-2 py-1 bg-gray-600 border border-gray-500 rounded text-sm mt-1">
+                                    </div>
+                                    <div>
+                                        <label class="text-xs text-gray-400">타인자본비용 (%)</label>
+                                        <input type="number" id="cost-of-debt" value="5" step="0.1" class="w-full px-2 py-1 bg-gray-600 border border-gray-500 rounded text-sm mt-1">
+                                    </div>
+                                </div>
+                                
+                                <!-- Beta 조정 -->
+                                <div class="p-2 bg-gray-600 rounded-lg border border-blue-500">
+                                    <p class="text-xs font-semibold text-blue-300 mb-2">🎯 Beta 조정 (Unlever → Relever)</p>
+                                    <div class="grid grid-cols-2 gap-2 mb-2">
+                                        <div>
+                                            <label class="text-xs text-gray-400">Unlevered β</label>
+                                            <input type="number" id="unlevered-beta" value="0.8" step="0.01" class="w-full px-2 py-1 bg-gray-700 border border-gray-500 rounded text-xs mt-1">
+                                        </div>
+                                        <div>
+                                            <label class="text-xs text-gray-400">목표 D/E (%)</label>
+                                            <input type="number" id="target-de" value="40" class="w-full px-2 py-1 bg-gray-700 border border-gray-500 rounded text-xs mt-1">
+                                        </div>
+                                    </div>
+                                    <button onclick="calculateReleverBeta()" class="w-full px-2 py-1 bg-blue-600 hover:bg-blue-500 rounded text-xs transition">
+                                        Levered β 계산
+                                    </button>
+                                </div>
+                                
+                                <!-- CAPM -->
+                                <details class="bg-gray-600 p-2 rounded-lg">
+                                    <summary class="cursor-pointer text-xs font-semibold text-green-300 mb-2">CAPM 계산</summary>
+                                    <div class="space-y-2 mt-2">
+                                        <div class="grid grid-cols-3 gap-2">
+                                            <div>
+                                                <label class="text-xs text-gray-400">무위험이자율 (%)</label>
+                                                <input type="number" id="risk-free-rate" value="3.5" step="0.1" class="w-full px-2 py-1 bg-gray-700 border border-gray-500 rounded text-xs mt-1">
+                                            </div>
+                                            <div>
+                                                <label class="text-xs text-gray-400">시장수익률 (%)</label>
+                                                <input type="number" id="market-return" value="9" step="0.1" class="w-full px-2 py-1 bg-gray-700 border border-gray-500 rounded text-xs mt-1">
+                                            </div>
+                                            <div>
+                                                <label class="text-xs text-gray-400">Beta (β)</label>
+                                                <input type="number" id="beta" value="1.2" step="0.01" class="w-full px-2 py-1 bg-gray-700 border border-gray-500 rounded text-xs mt-1">
+                                            </div>
+                                        </div>
+                                        <button onclick="calculateCAPM()" class="w-full px-2 py-1 bg-green-600 hover:bg-green-500 rounded text-xs transition">
+                                            자기자본비용 계산
+                                        </button>
+                                        <div id="capm-result" class="text-xs text-green-300"></div>
+                                    </div>
+                                </details>
+                                
+                                <div>
+                                    <label class="text-xs text-gray-400">자기자본비용 (%)</label>
+                                    <input type="number" id="cost-of-equity" value="12" step="0.1" class="w-full px-2 py-1 bg-gray-600 border border-gray-500 rounded text-sm mt-1">
+                                </div>
+                                
+                                <button onclick="calculateWACC()" class="w-full px-3 py-2 bg-cyan-600 hover:bg-cyan-500 rounded-lg transition text-sm">
+                                    WACC 계산
+                                </button>
+                                <div id="wacc-result" class="text-xs text-cyan-300"></div>
+                                <div id="wacc-formula" class="text-xs text-gray-400 p-2 bg-gray-800 rounded"></div>
+                            </div>
+                        </div>
+
+                        <!-- 시나리오 탭 -->
+                        <div id="content-scenario" class="space-y-3 hidden">
+                            <!-- 잔존가치 -->
+                            <div>
+                                <h3 class="text-sm font-semibold mb-2 text-orange-300">💰 잔존가치 (Terminal Value)</h3>
+                                <div class="mb-2">
+                                    <label class="text-xs text-gray-300">계산 방법</label>
+                                    <select id="tv-method" class="w-full px-2 py-1.5 bg-gray-700 border border-gray-600 rounded-lg mt-1 text-sm" onchange="toggleTVInputs()">
+                                        <option value="liquidation">청산가치</option>
+                                        <option value="perpetual">영구성장</option>
+                                        <option value="exit-multiple">Exit Multiple</option>
+                                    </select>
+                                </div>
+                                <div id="tv-inputs"></div>
+                            </div>
+
+                            <!-- 시나리오 선택 -->
+                            <div>
+                                <h3 class="text-sm font-semibold mb-2 text-pink-300">🎭 시나리오 선택</h3>
+                                <div class="grid grid-cols-3 gap-2">
+                                    <button onclick="applyScenario('conservative')" class="px-3 py-2 bg-red-600 hover:bg-red-500 rounded-lg transition text-sm">보수적</button>
+                                    <button onclick="applyScenario('base')" class="px-3 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg transition text-sm">기본</button>
+                                    <button onclick="applyScenario('optimistic')" class="px-3 py-2 bg-green-600 hover:bg-green-500 rounded-lg transition text-sm">낙관적</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 계산 버튼 -->
+                <button onclick="calculate()" class="w-full px-6 py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 rounded-xl text-lg font-bold transition shadow-lg">
+                    🚀 분석 시작
+                </button>
+            </div>
+
+            <!-- 오른쪽 결과 패널 -->
+            <div class="col-span-7 space-y-4">
+                
+                <!-- KPI 카드 -->
+                <div class="grid grid-cols-5 gap-3">
+                    <div class="bg-gradient-to-br from-blue-600 to-blue-700 p-4 rounded-xl text-center">
+                        <p class="text-sm text-blue-200">NPV</p>
+                        <p id="npv-value" class="text-2xl font-bold mt-1">-</p>
+                        <p class="text-xs text-blue-200 mt-1">억원</p>
+                    </div>
+                    <div class="bg-gradient-to-br from-green-600 to-green-700 p-4 rounded-xl text-center">
+                        <p class="text-sm text-green-200">IRR</p>
+                        <p id="irr-value" class="text-2xl font-bold mt-1">-</p>
+                        <p class="text-xs text-green-200 mt-1">%</p>
+                    </div>
+                    <div class="bg-gradient-to-br from-yellow-600 to-yellow-700 p-4 rounded-xl text-center">
+                        <p class="text-sm text-yellow-200">회수기간</p>
+                        <p id="payback-value" class="text-2xl font-bold mt-1">-</p>
+                        <p class="text-xs text-yellow-200 mt-1">년</p>
+                    </div>
+                    <div class="bg-gradient-to-br from-purple-600 to-purple-700 p-4 rounded-xl text-center">
+                        <p class="text-sm text-purple-200">손익분기</p>
+                        <p id="bep-value" class="text-2xl font-bold mt-1">-</p>
+                        <p class="text-xs text-purple-200 mt-1">년</p>
+                    </div>
+                    <div id="verdict-card" class="bg-gradient-to-br from-gray-600 to-gray-700 p-4 rounded-xl text-center">
+                        <p class="text-sm text-gray-200">판정</p>
+                        <p id="verdict-value" class="text-2xl font-bold mt-1">-</p>
+                    </div>
+                </div>
+
+                <!-- 몬테카를로 시뮬레이션 -->
+                <div class="bg-gray-800 p-4 rounded-xl border border-gray-700">
+                    <div class="flex justify-between items-center mb-3">
+                        <h2 class="text-lg font-semibold text-red-300">🎲 몬테카를로 시뮬레이션</h2>
+                        <button onclick="runMonteCarloSimulation()" class="px-4 py-2 bg-red-600 hover:bg-red-500 rounded-lg transition text-sm">
+                            시뮬레이션 실행
+                        </button>
+                    </div>
+                    <div class="chart-container-small">
+                        <canvas id="monte-carlo-chart"></canvas>
+                    </div>
+                    <div id="mc-stats" class="grid grid-cols-4 gap-3 mt-3 text-center text-sm"></div>
+                </div>
+
+                <!-- 시나리오 비교표 -->
+                <div class="bg-gray-800 p-4 rounded-xl border border-gray-700">
+                    <h2 class="text-lg font-semibold mb-3 text-blue-300">📊 시나리오 비교</h2>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead class="bg-gray-700">
+                                <tr>
+                                    <th class="px-4 py-2 text-left">항목</th>
+                                    <th class="px-4 py-2 text-center">보수적</th>
+                                    <th class="px-4 py-2 text-center">기본</th>
+                                    <th class="px-4 py-2 text-center">낙관적</th>
+                                </tr>
+                            </thead>
+                            <tbody id="scenario-table-body" class="divide-y divide-gray-700">
+                                <!-- 동적 생성 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 민감도 분석 (1-Way) -->
+                <div class="bg-gray-800 p-4 rounded-xl border border-gray-700">
+                    <h2 class="text-lg font-semibold mb-3 text-yellow-300">🎯 민감도 분석 (1-Way)</h2>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead class="bg-gray-700">
+                                <tr>
+                                    <th class="px-4 py-2 text-left">변수</th>
+                                    <th class="px-4 py-2 text-center">-20%</th>
+                                    <th class="px-4 py-2 text-center">-10%</th>
+                                    <th class="px-4 py-2 text-center">Base</th>
+                                    <th class="px-4 py-2 text-center">+10%</th>
+                                    <th class="px-4 py-2 text-center">+20%</th>
+                                </tr>
+                            </thead>
+                            <tbody id="sensitivity-table-body" class="divide-y divide-gray-700">
+                                <!-- 동적 생성 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 2-Way 민감도 분석 -->
+                <div class="bg-gray-800 p-4 rounded-xl border border-gray-700">
+                    <h2 class="text-lg font-semibold mb-3 text-orange-300">🎯🎯 2-Way 민감도 분석 (매출 × WACC)</h2>
+                    <div class="overflow-x-auto">
+                        <table id="sensitivity-2way-table" class="sensitivity-table w-full">
+                            <!-- 동적 생성 -->
+                        </table>
+                    </div>
+                    <p class="text-xs text-gray-400 mt-2">* 녹색: NPV > 0 (투자 가능), 빨간색: NPV < 0 (투자 불가)</p>
+                </div>
+
+                <!-- 현금흐름 차트 -->
+                <div class="bg-gray-800 p-4 rounded-xl border border-gray-700">
+                    <h2 class="text-lg font-semibold mb-3 text-green-300">📈 현금흐름 차트</h2>
+                    <div class="chart-container">
+                        <canvas id="cashflow-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- 연도별 FCF 테이블 -->
+                <div class="bg-gray-800 p-4 rounded-xl border border-gray-700">
+                    <h2 class="text-lg font-semibold mb-3 text-purple-300">📋 연도별 Free Cash Flow</h2>
+                    <div class="overflow-x-auto table-scroll">
+                        <table class="w-full text-xs">
+                            <thead class="bg-gray-700 sticky top-0">
+                                <tr>
+                                    <th class="px-2 py-2">연도</th>
+                                    <th class="px-2 py-2">매출</th>
+                                    <th class="px-2 py-2">영업이익</th>
+                                    <th class="px-2 py-2">NOPAT</th>
+                                    <th class="px-2 py-2">감가상각</th>
+                                    <th class="px-2 py-2">NWC증가</th>
+                                    <th class="px-2 py-2">FCF</th>
+                                    <th class="px-2 py-2">할인FCF</th>
+                                </tr>
+                            </thead>
+                            <tbody id="fcf-table-body" class="divide-y divide-gray-700 text-center">
+                                <!-- 동적 생성 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast 알림 -->
+    <div id="toast" class="fixed bottom-5 right-5 px-6 py-3 bg-green-600 text-white rounded-lg shadow-lg transform translate-y-20 opacity-0 transition-all duration-300"></div>
+
+    <script>
+        let projectData = {
+            revenues: [],
+            margins: [],
+            currentScenario: 'base',
+            lastFCFData: []
+        };
+
+        let charts = {
+            cashflow: null,
+            monteCarlo: null
+        };
+
+        // Toast 알림
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `fixed bottom-5 right-5 px-6 py-3 rounded-lg shadow-lg transition-all duration-300 ${
+                type === 'success' ? 'bg-green-600' : type === 'error' ? 'bg-red-600' : 'bg-blue-600'
+            } text-white transform translate-y-0 opacity-100`;
+            
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        // 탭 전환
+        function switchTab(tabName) {
+            ['basic', 'wacc', 'scenario'].forEach(name => {
+                const btn = document.getElementById(`tab-${name}`);
+                const content = document.getElementById(`content-${name}`);
+                
+                if (name === tabName) {
+                    btn.className = 'flex-1 px-4 py-3 bg-blue-600 text-white font-semibold transition text-sm';
+                    content.classList.remove('hidden');
+                } else {
+                    btn.className = 'flex-1 px-4 py-3 bg-gray-700 hover:bg-gray-600 transition text-sm';
+                    content.classList.add('hidden');
+                }
+            });
+        }
+
+        // 다크모드 토글
+        function toggleDarkMode() {
+            document.body.classList.toggle('bg-gray-100');
+            document.body.classList.toggle('text-gray-900');
+            showToast('다크모드 전환됨');
+        }
+
+        // TV 입력 필드 동적 변경
+        function toggleTVInputs() {
+            const method = document.getElementById('tv-method').value;
+            const container = document.getElementById('tv-inputs');
+            
+            if (method === 'liquidation') {
+                container.innerHTML = `
+                    <div>
+                        <label class="text-xs text-gray-300">청산가치 (억원)</label>
+                        <input type="number" id="liquidation-value" value="100" class="w-full px-2 py-1.5 bg-gray-700 border border-gray-600 rounded-lg mt-1 text-sm">
+                    </div>
+                `;
+            } else if (method === 'perpetual') {
+                container.innerHTML = `
+                    <div>
+                        <label class="text-xs text-gray-300">영구성장률 (g) (%)</label>
+                        <input type="number" id="growth-rate" value="2" step="0.1" class="w-full px-2 py-1.5 bg-gray-700 border border-gray-600 rounded-lg mt-1 text-sm">
+                    </div>
+                `;
+            } else if (method === 'exit-multiple') {
+                container.innerHTML = `
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="text-xs text-gray-300">Exit Multiple</label>
+                            <input type="number" id="exit-multiple" value="10" step="0.1" class="w-full px-2 py-1.5 bg-gray-700 border border-gray-600 rounded-lg mt-1 text-sm">
+                        </div>
+                        <div>
+                            <label class="text-xs text-gray-300">기준 지표</label>
+                            <select id="exit-metric" class="w-full px-2 py-1.5 bg-gray-700 border border-gray-600 rounded-lg mt-1 text-sm">
+                                <option value="ebitda">EBITDA</option>
+                                <option value="revenue">매출</option>
+                            </select>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // 초기 TV 입력 필드 설정
+        toggleTVInputs();
+
+        // 산업별 프리셋 적용
+        function applyIndustryPreset() {
+            const industry = document.getElementById('industry-preset').value;
+            const presets = {
+                'it': { wacc: 8, debtWeight: 10, costOfDebt: 4, costOfEquity: 8.5 },
+                'manufacturing': { wacc: 10, debtWeight: 40, costOfDebt: 5, costOfEquity: 13 },
+                'retail': { wacc: 9, debtWeight: 30, costOfDebt: 4.5, costOfEquity: 11 },
+                'healthcare': { wacc: 7, debtWeight: 20, costOfDebt: 3.5, costOfEquity: 8 },
+                'construction': { wacc: 11, debtWeight: 50, costOfDebt: 6, costOfEquity: 14 }
+            };
+            
+            if (presets[industry]) {
+                document.getElementById('discount_rate').value = presets[industry].wacc;
+                document.getElementById('debt-weight').value = presets[industry].debtWeight;
+                document.getElementById('cost-of-debt').value = presets[industry].costOfDebt;
+                document.getElementById('cost-of-equity').value = presets[industry].costOfEquity;
+                showToast(`${industry.toUpperCase()} 산업 프리셋 적용됨`);
+            }
+        }
+
+        // Beta 조정 계산 (Hamada Formula)
+        function calculateReleverBeta() {
+            const unleveredBeta = parseFloat(document.getElementById('unlevered-beta').value);
+            const targetDE = parseFloat(document.getElementById('target-de').value) / 100;
+            const taxRate = parseFloat(document.getElementById('tax_rate').value) / 100;
+            
+            const leveredBeta = unleveredBeta * (1 + (1 - taxRate) * targetDE);
+            
+            document.getElementById('beta').value = leveredBeta.toFixed(2);
+            showToast(`Levered β = ${leveredBeta.toFixed(2)}`);
+        }
+
+        // CAPM 계산
+        function calculateCAPM() {
+            const rf = parseFloat(document.getElementById('risk-free-rate').value) / 100;
+            const rm = parseFloat(document.getElementById('market-return').value) / 100;
+            const beta = parseFloat(document.getElementById('beta').value);
+            
+            const costOfEquity = rf + beta * (rm - rf);
+            document.getElementById('cost-of-equity').value = (costOfEquity * 100).toFixed(2);
+            
+            document.getElementById('capm-result').innerHTML = `
+                Re = ${(rf * 100).toFixed(1)}% + ${beta.toFixed(2)} × (${(rm * 100).toFixed(1)}% - ${(rf * 100).toFixed(1)}%)
+                = <strong>${(costOfEquity * 100).toFixed(2)}%</strong>
+            `;
+            
+            showToast('자기자본비용 계산 완료');
+        }
+
+        // WACC 계산
+        function calculateWACC() {
+            const debtWeight = parseFloat(document.getElementById('debt-weight').value) / 100;
+            const equityWeight = 1 - debtWeight;
+            const costOfDebt = parseFloat(document.getElementById('cost-of-debt').value) / 100;
+            const costOfEquity = parseFloat(document.getElementById('cost-of-equity').value) / 100;
+            const taxRate = parseFloat(document.getElementById('tax_rate').value) / 100;
+            
+            const wacc = (debtWeight * costOfDebt * (1 - taxRate)) + (equityWeight * costOfEquity);
+            
+            document.getElementById('discount_rate').value = (wacc * 100).toFixed(2);
+            
+            document.getElementById('wacc-formula').innerHTML = `
+                <strong>WACC 계산:</strong><br>
+                WACC = (D/(D+E) × Rd × (1-T)) + (E/(D+E) × Re)<br>
+                = (${(debtWeight * 100).toFixed(1)}% × ${(costOfDebt * 100).toFixed(1)}% × ${((1-taxRate) * 100).toFixed(0)}%) 
+                + (${(equityWeight * 100).toFixed(1)}% × ${(costOfEquity * 100).toFixed(1)}%)<br>
+                = <strong style="color: #22d3ee;">${(wacc * 100).toFixed(2)}%</strong>
+            `;
+            
+            document.getElementById('wacc-result').innerHTML = `계산 결과: <strong>${(wacc * 100).toFixed(2)}%</strong>`;
+            
+            showToast('WACC 계산 완료!');
+        }
+
+        // 엑셀 업로드
+        function handleExcelUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+                
+                projectData.revenues = jsonData.slice(1).map(row => parseFloat(row[0]) || 0);
+                
+                showToast('엑셀 데이터 업로드 완료!');
+                calculate();
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        // CAGR 기반 매출 생성
+        function generateRevenue() {
+            const initialRevenue = parseFloat(document.getElementById('initial-revenue').value);
+            const cagr = parseFloat(document.getElementById('cagr').value) / 100;
+            const period = parseInt(document.getElementById('analysis_period').value);
+            
+            projectData.revenues = [];
+            for (let i = 0; i < period; i++) {
+                projectData.revenues.push(initialRevenue * Math.pow(1 + cagr, i));
+            }
+            
+            showToast('매출 데이터 생성 완료!');
+        }
+
+        // 시나리오 적용
+        function applyScenario(scenario) {
+            const scenarios = {
+                'conservative': { marginMultiplier: 0.8, wacc: 12 },
+                'base': { marginMultiplier: 1.0, wacc: 10 },
+                'optimistic': { marginMultiplier: 1.2, wacc: 8 }
+            };
+            
+            const selected = scenarios[scenario];
+            document.getElementById('discount_rate').value = selected.wacc;
+            projectData.currentScenario = scenario;
+            
+            showToast(`${scenario === 'conservative' ? '보수적' : scenario === 'base' ? '기본' : '낙관적'} 시나리오 적용됨`);
+            calculate();
+        }
+
+        // IRR 계산 (개선된 수렴 로직)
+        function calculateIRR(cashflows) {
+            let low = -0.99, high = 5.0;
+            const tolerance = 0.0001;
+            const maxIterations = 200;
+            
+            for (let k = 0; k < maxIterations; k++) {
+                let mid = (low + high) / 2;
+                let npv = 0;
+                
+                cashflows.forEach((cf, i) => {
+                    npv += cf / Math.pow(1 + mid, i);
+                });
+                
+                if (Math.abs(npv) < tolerance) {
+                    return mid * 100;
+                }
+                
+                if (npv > 0) {
+                    low = mid;
+                } else {
+                    high = mid;
+                }
+            }
+            
+            return ((low + high) / 2) * 100;
+        }
+
+        // 빠른 NPV 계산
+        function quickCalculateNPV() {
+            const initialInvestment = parseFloat(document.getElementById('initial_investment').value);
+            const period = parseInt(document.getElementById('analysis_period').value);
+            const taxRate = parseFloat(document.getElementById('tax_rate').value) / 100;
+            const discountRate = parseFloat(document.getElementById('discount_rate').value) / 100;
+            const nwcRate = parseFloat(document.getElementById('nwc_rate').value) / 100;
+            
+            const revenues = projectData.revenues.length > 0 ? projectData.revenues : 
+                             Array.from({length: period}, (_, i) => {
+                                 const initial = parseFloat(document.getElementById('initial-revenue').value);
+                                 const cagr = parseFloat(document.getElementById('cagr').value) / 100;
+                                 return initial * Math.pow(1 + cagr, i);
+                             });
+            
+            let npv = -initialInvestment;
+            let prevNWC = 0;
+            const depreciation = initialInvestment / parseInt(document.getElementById('useful_life').value);
+            
+            for (let year = 1; year <= period; year++) {
+                const revenue = revenues[year - 1] || 0;
+                const operatingProfit = revenue * 0.2;
+                const nopat = operatingProfit * (1 - taxRate);
+                
+                const currentNWC = revenue * nwcRate;
+                const nwcIncrease = currentNWC - prevNWC;
+                prevNWC = currentNWC;
+                
+                let fcf = nopat + depreciation - nwcIncrease;
+                
+                if (year === period) {
+                    fcf += currentNWC;
+                }
+                
+                npv += fcf / Math.pow(1 + discountRate, year);
+            }
+            
+            return npv;
+        }
+
+        // 메인 계산 함수
+        function calculate() {
+            try {
+                const initialInvestment = parseFloat(document.getElementById('initial_investment').value);
+                const usefulLife = parseInt(document.getElementById('useful_life').value);
+                const period = parseInt(document.getElementById('analysis_period').value);
+                const taxRate = parseFloat(document.getElementById('tax_rate').value) / 100;
+                const discountRate = parseFloat(document.getElementById('discount_rate').value) / 100;
+                const nwcRate = parseFloat(document.getElementById('nwc_rate').value) / 100;
+                
+                if (projectData.revenues.length === 0) {
+                    generateRevenue();
+                }
+                
+                const depreciation = initialInvestment / usefulLife;
+                
+                const cashflows = [-initialInvestment];
+                const fcfData = [];
+                let prevNWC = 0;
+                
+                for (let year = 1; year <= period; year++) {
+                    const revenue = projectData.revenues[year - 1] || 0;
+                    const operatingMargin = 0.2;
+                    const operatingProfit = revenue * operatingMargin;
+                    const nopat = operatingProfit * (1 - taxRate);
+                    
+                    const currentNWC = revenue * nwcRate;
+                    const nwcIncrease = currentNWC - prevNWC;
+                    prevNWC = currentNWC;
+                    
+                    let fcf = nopat + depreciation - nwcIncrease;
+                    
+                    if (year === period) {
+                        const tvMethod = document.getElementById('tv-method').value;
+                        let residual = 0;
+                        
+                        if (tvMethod === 'liquidation') {
+                            residual = parseFloat(document.getElementById('liquidation-value').value);
+                        } else if (tvMethod === 'perpetual') {
+                            const g = parseFloat(document.getElementById('growth-rate').value) / 100;
+                            const normalizedFCF = nopat + depreciation;
+                            const terminalValue = normalizedFCF * (1 + g) / (discountRate - g);
+                            residual = terminalValue + currentNWC;
+                        } else if (tvMethod === 'exit-multiple') {
+                            const multiple = parseFloat(document.getElementById('exit-multiple').value);
+                            const metric = document.getElementById('exit-metric').value;
+                            residual = (metric === 'ebitda' ? operatingProfit : revenue) * multiple;
+                        }
+                        
+                        fcf += residual;
+                    }
+                    
+                    cashflows.push(fcf);
+                    
+                    const discountedFCF = fcf / Math.pow(1 + discountRate, year);
+                    
+                    fcfData.push({
+                        year,
+                        revenue,
+                        operatingProfit,
+                        nopat,
+                        depreciation,
+                        nwcIncrease,
+                        fcf,
+                        discountedFCF
+                    });
+                }
+                
+                projectData.lastFCFData = fcfData;
+                
+                const npv = cashflows.reduce((sum, cf, i) => sum + cf / Math.pow(1 + discountRate, i), 0);
+                const irr = calculateIRR(cashflows);
+                
+                let cumulativeCF = -initialInvestment;
+                let paybackPeriod = period;
+                for (let i = 0; i < fcfData.length; i++) {
+                    cumulativeCF += fcfData[i].fcf;
+                    if (cumulativeCF >= 0) {
+                        paybackPeriod = i + 1;
+                        break;
+                    }
+                }
+                
+                // 손익분기점 계산 (누적 영업이익이 초기투자금 회수)
+                let cumulativeProfit = 0;
+                let bep = period;
+                for (let i = 0; i < fcfData.length; i++) {
+                    // 영업이익 누적 (NOPAT + 감가상각)
+                    cumulativeProfit += fcfData[i].nopat + fcfData[i].depreciation;
+                    
+                    // 초기투자금 회수 여부 확인
+                    if (cumulativeProfit >= initialInvestment) {
+                        bep = i + 1;
+                        break;
+                    }
+                }
+                
+                document.getElementById('npv-value').textContent = npv.toFixed(1);
+                document.getElementById('irr-value').textContent = irr.toFixed(2);
+                document.getElementById('payback-value').textContent = paybackPeriod;
+                document.getElementById('bep-value').textContent = bep;
+                
+                const verdict = npv > 0 && irr > discountRate * 100 ? '✅ 투자 가능' : '❌ 투자 불가';
+                const verdictCard = document.getElementById('verdict-card');
+                document.getElementById('verdict-value').textContent = verdict;
+                verdictCard.className = npv > 0 ? 
+                    'bg-gradient-to-br from-green-600 to-green-700 p-4 rounded-xl text-center' :
+                    'bg-gradient-to-br from-red-600 to-red-700 p-4 rounded-xl text-center';
+                
+                updateCashflowChart(fcfData);
+                updateFCFTable(fcfData);
+                updateScenarioComparison(npv, irr);
+                calculate1WaySensitivity();
+                calculate2WaySensitivity();
+                
+                showToast('분석 완료!', 'success');
+                
+            } catch (error) {
+                console.error('계산 오류:', error);
+                showToast('계산 중 오류가 발생했습니다', 'error');
+            }
+        }
+
+        // 시나리오 비교표 업데이트
+        function updateScenarioComparison(baseNPV, baseIRR) {
+            const scenarios = {
+                'conservative': { margin: 0.85, wacc: 12 },
+                'base': { margin: 1.0, wacc: 10 },
+                'optimistic': { margin: 1.15, wacc: 8 }
+            };
+            
+            const tbody = document.getElementById('scenario-table-body');
+            tbody.innerHTML = '';
+            
+            const metrics = [
+                { name: 'NPV (억원)', key: 'npv' },
+                { name: 'IRR (%)', key: 'irr' },
+                { name: '회수기간 (년)', key: 'payback' }
+            ];
+            
+            metrics.forEach(metric => {
+                const row = document.createElement('tr');
+                let cells = `<td class="px-4 py-2 font-semibold">${metric.name}</td>`;
+                
+                Object.keys(scenarios).forEach(scenario => {
+                    const multiplier = scenarios[scenario].margin;
+                    let value;
+                    
+                    if (metric.key === 'npv') {
+                        value = (baseNPV * multiplier).toFixed(1);
+                    } else if (metric.key === 'irr') {
+                        value = (baseIRR * multiplier).toFixed(2);
+                    } else {
+                        value = Math.max(1, Math.floor(5 / multiplier));
+                    }
+                    
+                    const color = parseFloat(value) > 0 ? 'text-green-400' : 'text-red-400';
+                    cells += `<td class="px-4 py-2 text-center ${color}">${value}</td>`;
+                });
+                
+                row.innerHTML = cells;
+                tbody.appendChild(row);
+            });
+        }
+
+        // 1-Way 민감도 분석
+        function calculate1WaySensitivity() {
+            const tbody = document.getElementById('sensitivity-table-body');
+            tbody.innerHTML = '';
+            
+            const baseValues = {
+                revenue: parseFloat(document.getElementById('initial-revenue').value),
+                wacc: parseFloat(document.getElementById('discount_rate').value),
+                nwcRate: parseFloat(document.getElementById('nwc_rate').value) / 100
+            };
+            
+            const variables = [
+                { name: '초기 매출', field: 'revenue', id: 'initial-revenue' },
+                { name: 'WACC', field: 'wacc', id: 'discount_rate' },
+                { name: '운전자본 비율', field: 'nwcRate', id: 'nwc_rate', isPercent: true }
+            ];
+            
+            variables.forEach(variable => {
+                const row = document.createElement('tr');
+                const variations = [-0.2, -0.1, 0, 0.1, 0.2];
+                
+                let cells = `<td class="px-4 py-2">${variable.name}</td>`;
+                
+                variations.forEach(variation => {
+                    const originalValue = document.getElementById(variable.id).value;
+                    const adjustedValue = baseValues[variable.field] * (1 + variation);
+                    
+                    if (variable.isPercent) {
+                        document.getElementById(variable.id).value = adjustedValue * 100;
+                    } else {
+                        document.getElementById(variable.id).value = adjustedValue;
+                    }
+                    
+                    const npv = quickCalculateNPV();
+                    
+                    document.getElementById(variable.id).value = originalValue;
+                    
+                    const color = npv > 0 ? 'text-green-400' : 'text-red-400';
+                    cells += `<td class="px-4 py-2 text-center ${color}">${npv.toFixed(1)}</td>`;
+                });
+                
+                row.innerHTML = cells;
+                tbody.appendChild(row);
+            });
+        }
+
+        // 2-Way 민감도 분석
+        function calculate2WaySensitivity() {
+            const baseRevenue = parseFloat(document.getElementById('initial-revenue').value);
+            const baseWACC = parseFloat(document.getElementById('discount_rate').value);
+            
+            const revenueVariations = [-0.2, -0.1, 0, 0.1, 0.2];
+            const waccVariations = [-2, -1, 0, 1, 2];
+            
+            const table = document.getElementById('sensitivity-2way-table');
+            table.innerHTML = '';
+            
+            let headerRow = '<tr><th>매출 \\ WACC</th>';
+            waccVariations.forEach(wv => {
+                const waccValue = (baseWACC + wv).toFixed(1);
+                headerRow += `<th>${waccValue}%</th>`;
+            });
+            headerRow += '</tr>';
+            table.innerHTML += headerRow;
+            
+            const originalRevenue = document.getElementById('initial-revenue').value;
+            const originalWACC = document.getElementById('discount_rate').value;
+            
+            revenueVariations.forEach(rv => {
+                const revenueValue = (baseRevenue * (1 + rv)).toFixed(0);
+                let row = `<tr><td>${revenueValue}억</td>`;
+                
+                waccVariations.forEach(wv => {
+                    document.getElementById('initial-revenue').value = baseRevenue * (1 + rv);
+                    document.getElementById('discount_rate').value = baseWACC + wv;
+                    
+                    const npv = quickCalculateNPV();
+                    
+                    const cellClass = npv > 0 ? 'sensitivity-positive' : 'sensitivity-negative';
+                    row += `<td class="${cellClass}">${npv.toFixed(0)}</td>`;
+                });
+                
+                row += '</tr>';
+                table.innerHTML += row;
+            });
+            
+            document.getElementById('initial-revenue').value = originalRevenue;
+            document.getElementById('discount_rate').value = originalWACC;
+        }
+
+        // 현금흐름 차트
+        function updateCashflowChart(fcfData) {
+            const ctx = document.getElementById('cashflow-chart').getContext('2d');
+            
+            if (charts.cashflow) {
+                charts.cashflow.destroy();
+            }
+            
+            charts.cashflow = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: fcfData.map(d => `Y${d.year}`),
+                    datasets: [{
+                        label: 'FCF',
+                        data: fcfData.map(d => d.fcf),
+                        backgroundColor: 'rgba(59, 130, 246, 0.6)',
+                        borderColor: 'rgba(59, 130, 246, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { color: '#94a3b8' },
+                            grid: { color: '#334155' }
+                        },
+                        x: {
+                            ticks: { color: '#94a3b8' },
+                            grid: { color: '#334155' }
+                        }
+                    }
+                }
+            });
+        }
+
+        // FCF 테이블 업데이트
+        function updateFCFTable(fcfData) {
+            const tbody = document.getElementById('fcf-table-body');
+            tbody.innerHTML = '';
+            
+            fcfData.forEach(data => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="px-2 py-2">${data.year}</td>
+                    <td class="px-2 py-2">${data.revenue.toFixed(1)}</td>
+                    <td class="px-2 py-2">${data.operatingProfit.toFixed(1)}</td>
+                    <td class="px-2 py-2">${data.nopat.toFixed(1)}</td>
+                    <td class="px-2 py-2">${data.depreciation.toFixed(1)}</td>
+                    <td class="px-2 py-2">${data.nwcIncrease.toFixed(1)}</td>
+                    <td class="px-2 py-2 font-bold">${data.fcf.toFixed(1)}</td>
+                    <td class="px-2 py-2 text-blue-400">${data.discountedFCF.toFixed(1)}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // 몬테카를로 시뮬레이션
+        function runMonteCarloSimulation() {
+            const simulations = 1000;
+            const results = [];
+            
+            const originalRevenue = document.getElementById('initial-revenue').value;
+            const originalWACC = document.getElementById('discount_rate').value;
+            
+            for (let i = 0; i < simulations; i++) {
+                const randomRevenue = parseFloat(originalRevenue) * (0.8 + Math.random() * 0.4);
+                const randomWACC = parseFloat(originalWACC) * (0.9 + Math.random() * 0.2);
+                
+                document.getElementById('initial-revenue').value = randomRevenue;
+                document.getElementById('discount_rate').value = randomWACC;
+                
+                const npv = quickCalculateNPV();
+                results.push(npv);
+            }
+            
+            document.getElementById('initial-revenue').value = originalRevenue;
+            document.getElementById('discount_rate').value = originalWACC;
+            
+            results.sort((a, b) => a - b);
+            const mean = results.reduce((a, b) => a + b, 0) / results.length;
+            const p10 = results[Math.floor(simulations * 0.1)];
+            const p50 = results[Math.floor(simulations * 0.5)];
+            const p90 = results[Math.floor(simulations * 0.9)];
+            
+            document.getElementById('mc-stats').innerHTML = `
+                <div class="bg-gray-700 p-2 rounded-lg">
+                    <p class="text-xs text-gray-400">평균 NPV</p>
+                    <p class="text-base font-bold">${mean.toFixed(1)}</p>
+                </div>
+                <div class="bg-gray-700 p-2 rounded-lg">
+                    <p class="text-xs text-gray-400">P10</p>
+                    <p class="text-base font-bold">${p10.toFixed(1)}</p>
+                </div>
+                <div class="bg-gray-700 p-2 rounded-lg">
+                    <p class="text-xs text-gray-400">P50</p>
+                    <p class="text-base font-bold">${p50.toFixed(1)}</p>
+                </div>
+                <div class="bg-gray-700 p-2 rounded-lg">
+                    <p class="text-xs text-gray-400">P90</p>
+                    <p class="text-base font-bold">${p90.toFixed(1)}</p>
+                </div>
+            `;
+            
+            const ctx = document.getElementById('monte-carlo-chart').getContext('2d');
+            if (charts.monteCarlo) {
+                charts.monteCarlo.destroy();
+            }
+            
+            const bins = 20;
+            const binSize = (Math.max(...results) - Math.min(...results)) / bins;
+            const histogram = new Array(bins).fill(0);
+            
+            results.forEach(r => {
+                const binIndex = Math.min(Math.floor((r - Math.min(...results)) / binSize), bins - 1);
+                histogram[binIndex]++;
+            });
+            
+            charts.monteCarlo = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: histogram.map((_, i) => ((Math.min(...results) + binSize * i)).toFixed(0)),
+                    datasets: [{
+                        label: '빈도',
+                        data: histogram,
+                        backgroundColor: 'rgba(239, 68, 68, 0.6)',
+                        borderColor: 'rgba(239, 68, 68, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } },
+                        x: { ticks: { color: '#94a3b8', maxRotation: 45, minRotation: 45 }, grid: { color: '#334155' } }
+                    }
+                }
+            });
+            
+            showToast('몬테카를로 시뮬레이션 완료!');
+        }
+
+        // 프로젝트 저장
+        function saveProject() {
+            const projectName = document.getElementById('project-name').value || 'untitled';
+            const data = {
+                name: projectName,
+                revenues: projectData.revenues,
+                margins: projectData.margins,
+                timestamp: new Date().toISOString()
+            };
+            
+            localStorage.setItem(`project_${projectName}`, JSON.stringify(data));
+            showToast('프로젝트 저장 완료!');
+        }
+
+        // 프로젝트 불러오기
+        function loadProject() {
+            const projectName = document.getElementById('project-name').value;
+            const data = localStorage.getItem(`project_${projectName}`);
+            
+            if (data) {
+                const project = JSON.parse(data);
+                projectData = project;
+                showToast('프로젝트 불러오기 완료!');
+                calculate();
+            } else {
+                showToast('프로젝트를 찾을 수 없습니다', 'error');
+            }
+        }
+
+        // 템플릿 다운로드
+        function downloadTemplate() {
+            const wb = XLSX.utils.book_new();
+            const ws_data = [
+                ['연도', '매출 (억원)', '영업이익률 (%)'],
+                [1, 100, 20],
+                [2, 120, 22],
+                [3, 145, 23]
+            ];
+            const ws = XLSX.utils.aoa_to_sheet(ws_data);
+            XLSX.utils.book_append_sheet(wb, ws, "매출 템플릿");
+            XLSX.writeFile(wb, "투자분석_템플릿.xlsx");
+            
+            showToast('템플릿 다운로드 완료!');
+        }
+
+        // 엑셀 다운로드
+        function downloadExcel() {
+            const tbody = document.getElementById('fcf-table-body');
+            if (!tbody || tbody.children.length === 0) {
+                showToast('먼저 분석을 실행하세요', 'error');
+                return;
+            }
+            
+            const wb = XLSX.utils.book_new();
+            
+            const fcfData = [
+                ['연도', '매출', '영업이익', 'NOPAT', '감가상각', 'NWC증가', 'FCF', '할인FCF']
+            ];
+            
+            Array.from(tbody.children).forEach(row => {
+                const cells = Array.from(row.children).map(cell => cell.textContent.trim());
+                fcfData.push(cells);
+            });
+            
+            const ws1 = XLSX.utils.aoa_to_sheet(fcfData);
+            XLSX.utils.book_append_sheet(wb, ws1, "현금흐름");
+            
+            const summaryData = [
+                ['투자 경제성 분석 요약'],
+                [''],
+                ['지표', '값', '단위'],
+                ['NPV', document.getElementById('npv-value').textContent, '억원'],
+                ['IRR', document.getElementById('irr-value').textContent, '%'],
+                ['회수기간', document.getElementById('payback-value').textContent, '년'],
+                ['손익분기', document.getElementById('bep-value').textContent, '년'],
+                ['판정', document.getElementById('verdict-value').textContent, '']
+            ];
+            
+            const ws2 = XLSX.utils.aoa_to_sheet(summaryData);
+            XLSX.utils.book_append_sheet(wb, ws2, "요약");
+            
+            const projectName = document.getElementById('project-name').value || 'investment_analysis';
+            XLSX.writeFile(wb, `${projectName}_분석결과.xlsx`);
+            
+            showToast('엑셀 다운로드 완료!');
+        }
+
+        // 공유
+        function shareResults() {
+            const url = window.location.href;
+            navigator.clipboard.writeText(url);
+            showToast('링크가 클립보드에 복사되었습니다!');
+        }
+
+        // 초기 실행
+        window.onload = function() {
+            generateRevenue();
+            showToast('대시보드 준비 완료!', 'info');
+        };
+    </script>
+</body>
+</html>
