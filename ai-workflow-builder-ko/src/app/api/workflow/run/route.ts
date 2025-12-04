@@ -39,6 +39,7 @@ import {
   WorkflowExecutionResult,
 } from '@/types/workflow';
 import { callLLM, buildMessages } from '@/lib/providers';
+import { createSafeId } from '@/utils/id';
 
 interface WorkflowRequest {
   nodes: Node<WorkflowNodeData>[];
@@ -1652,7 +1653,7 @@ export async function POST(request: NextRequest) {
 
     // Build execution result
     const executionResult: WorkflowExecutionResult = {
-      workflowId: `exec-${Date.now()}`,
+      workflowId: createSafeId('exec'),
       status: Object.values(nodeResults).some(r => r.status === 'error') 
         ? 'error' 
         : 'success',

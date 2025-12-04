@@ -2,6 +2,7 @@
 
 import { Plus, Minus } from 'lucide-react';
 import { AIRouterNodeData, RouterScenario } from '@/types/workflow';
+import { createSafeId } from '@/utils/id';
 
 interface AIRouterConfigProps {
   data: AIRouterNodeData;
@@ -12,7 +13,7 @@ interface AIRouterConfigProps {
 export function AIRouterConfig({ data, nodeId, updateNodeData }: AIRouterConfigProps) {
   const addScenario = () => {
     const newScenario: RouterScenario = {
-      id: `scenario-${Date.now()}`,
+      id: createSafeId('scenario'),
       name: `시나리오${(data.scenarios?.length || 0) + 1}`,
       description: '',
     };
