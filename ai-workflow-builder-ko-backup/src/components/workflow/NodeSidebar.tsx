@@ -8,7 +8,7 @@ import { Node } from 'reactflow';
 
 const nodeTemplates = [
   {
-    type: 'inputNode',
+    type: 'input',
     label: '입력',
     icon: Type,
     color: 'bg-emerald-500',
@@ -22,7 +22,7 @@ const nodeTemplates = [
     }),
   },
   {
-    type: 'smartanalysisNode',
+    type: 'smartanalysis',
     label: '🔮 스마트 분석',
     icon: Sparkles,
     color: 'bg-gradient-to-r from-violet-500 via-purple-500 to-pink-500',
@@ -34,7 +34,7 @@ const nodeTemplates = [
     }),
   },
   {
-    type: 'intentParserNode',
+    type: 'intentparser',
     label: '🧠 통역사',
     icon: Brain,
     color: 'bg-gradient-to-r from-pink-500 to-violet-500',
@@ -45,7 +45,7 @@ const nodeTemplates = [
     }),
   },
   {
-    type: 'llmNode',
+    type: 'llm',
     label: 'AI 모델',
     icon: Bot,
     color: 'bg-blue-500',
@@ -62,7 +62,7 @@ const nodeTemplates = [
     }),
   },
   {
-    type: 'transformNode',
+    type: 'transform',
     label: '변환',
     icon: Wand2,
     color: 'bg-amber-500',
@@ -77,7 +77,7 @@ const nodeTemplates = [
     }),
   },
   {
-    type: 'outputNode',
+    type: 'output',
     label: '출력',
     icon: FileOutput,
     color: 'bg-purple-500',
@@ -89,7 +89,7 @@ const nodeTemplates = [
     }),
   },
   {
-    type: 'conditionNode',
+    type: 'condition',
     label: '조건 분기',
     icon: GitBranch,
     color: 'bg-orange-500',
@@ -103,7 +103,7 @@ const nodeTemplates = [
     }),
   },
   {
-    type: 'loopNode',
+    type: 'loop',
     label: '반복',
     icon: Repeat,
     color: 'bg-cyan-500',
@@ -117,7 +117,7 @@ const nodeTemplates = [
     }),
   },
   {
-    type: 'apiNode',
+    type: 'api',
     label: 'API 호출',
     icon: Globe,
     color: 'bg-indigo-500',
@@ -132,7 +132,7 @@ const nodeTemplates = [
     }),
   },
   {
-    type: 'delayNode',
+    type: 'delay',
     label: '잠깐 쉬어',
     icon: Timer,
     color: 'bg-yellow-500',
@@ -145,7 +145,7 @@ const nodeTemplates = [
     }),
   },
   {
-    type: 'webhookNode',
+    type: 'webhook',
     label: '알림 보내기',
     icon: Bell,
     color: 'bg-pink-500',
@@ -159,7 +159,7 @@ const nodeTemplates = [
     }),
   },
   {
-    type: 'randomNode',
+    type: 'random',
     label: '랜덤 뽑기',
     icon: Shuffle,
     color: 'bg-teal-500',
@@ -173,7 +173,7 @@ const nodeTemplates = [
     }),
   },
   {
-    type: 'sliceNode',
+    type: 'slice',
     label: '텍스트 자르기',
     icon: Scissors,
     color: 'bg-rose-500',
@@ -187,7 +187,7 @@ const nodeTemplates = [
     }),
   },
   {
-    type: 'datetimeNode',
+    type: 'datetime',
     label: '날짜/시간',
     icon: Calendar,
     color: 'bg-violet-500',
@@ -200,7 +200,7 @@ const nodeTemplates = [
     }),
   },
   {
-    type: 'filesaveNode',
+    type: 'filesave',
     label: '파일 저장',
     icon: Download,
     color: 'bg-lime-500',
@@ -214,7 +214,7 @@ const nodeTemplates = [
     }),
   },
   {
-    type: 'taskbreakdownNode',
+    type: 'taskbreakdown',
     label: '작업 분해',
     icon: ListTodo,
     color: 'bg-gradient-to-r from-indigo-500 to-purple-500',
@@ -229,7 +229,7 @@ const nodeTemplates = [
     }),
   },
   {
-    type: 'stateNode',
+    type: 'state',
     label: '전역 상태',
     icon: Database,
     color: 'bg-gradient-to-r from-blue-500 to-cyan-500',
@@ -242,7 +242,7 @@ const nodeTemplates = [
     }),
   },
   {
-    type: 'airouterNode',
+    type: 'airouter',
     label: 'AI 라우터',
     icon: Route,
     color: 'bg-gradient-to-r from-purple-500 to-pink-500',
@@ -259,7 +259,7 @@ const nodeTemplates = [
     }),
   },
   {
-    type: 'approvalNode',
+    type: 'approval',
     label: '승인 요청',
     icon: UserCheck,
     color: 'bg-gradient-to-r from-amber-500 to-orange-500',
@@ -274,7 +274,7 @@ const nodeTemplates = [
     }),
   },
   {
-    type: 'noteNode',
+    type: 'note',
     label: '메모',
     icon: StickyNote,
     color: 'bg-amber-400',
@@ -288,7 +288,7 @@ const nodeTemplates = [
     }),
   },
   {
-    type: 'codeNode',
+    type: 'code',
     label: '코드 실행',
     icon: Code2,
     color: 'bg-gradient-to-r from-green-500 to-emerald-600',
@@ -301,7 +301,7 @@ const nodeTemplates = [
     }),
   },
   {
-    type: 'parallelNode',
+    type: 'parallel',
     label: '병렬 실행',
     icon: GitMerge,
     color: 'bg-gradient-to-r from-fuchsia-500 to-purple-600',
@@ -314,7 +314,7 @@ const nodeTemplates = [
     }),
   },
   {
-    type: 'templateNode',
+    type: 'template',
     label: '빈칸 채우기',
     icon: FileText,
     color: 'bg-gradient-to-r from-sky-500 to-blue-600',
@@ -330,7 +330,7 @@ const nodeTemplates = [
     }),
   },
   {
-    type: 'htmlcleanNode',
+    type: 'htmlclean',
     label: 'HTML 청소기',
     icon: Eraser,
     color: 'bg-gradient-to-r from-red-400 to-orange-500',
@@ -346,7 +346,7 @@ const nodeTemplates = [
     }),
   },
   {
-    type: 'mathNode',
+    type: 'math',
     label: '계산기',
     icon: Calculator,
     color: 'bg-gradient-to-r from-emerald-500 to-teal-600',
@@ -361,7 +361,7 @@ const nodeTemplates = [
     }),
   },
   {
-    type: 'formulaNode',
+    type: 'formula',
     label: '수식 계산',
     icon: FunctionSquare,
     color: 'bg-gradient-to-r from-violet-500 to-purple-600',
@@ -379,7 +379,7 @@ const nodeTemplates = [
     }),
   },
   {
-    type: 'multifilterNode',
+    type: 'multifilter',
     label: '복합 필터',
     icon: Filter,
     color: 'bg-gradient-to-r from-cyan-500 to-blue-600',
@@ -397,7 +397,7 @@ const nodeTemplates = [
     }),
   },
   {
-    type: 'stockalertNode',
+    type: 'stockalert',
     label: '📈 주식 급등락',
     icon: TrendingUp,
     color: 'bg-gradient-to-r from-amber-500 via-orange-500 to-red-500',
@@ -420,7 +420,7 @@ const nodeTemplates = [
   // 📊 재무분석 강화 노드들 (NEW!)
   // ════════════════════════════════════════
   {
-    type: 'multiagentNode',
+    type: 'multiagent',
     label: '👥 다중 AI 패널',
     icon: Users,
     color: 'bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500',
@@ -434,7 +434,7 @@ const nodeTemplates = [
     }),
   },
   {
-    type: 'compareinputNode',
+    type: 'compareinput',
     label: '🔄 기업 비교',
     icon: GitCompare,
     color: 'bg-gradient-to-r from-cyan-500 to-blue-500',
@@ -447,7 +447,7 @@ const nodeTemplates = [
     }),
   },
   {
-    type: 'tableoutputNode',
+    type: 'tableoutput',
     label: '📊 표 출력',
     icon: Table,
     color: 'bg-gradient-to-r from-emerald-500 to-teal-500',
@@ -463,7 +463,7 @@ const nodeTemplates = [
     }),
   },
   {
-    type: 'chartNode',
+    type: 'chart',
     label: '📈 차트',
     icon: BarChart3,
     color: 'bg-gradient-to-r from-violet-500 to-purple-500',
@@ -482,7 +482,7 @@ const nodeTemplates = [
   // 👔 전문가 AI 프리셋 (직업별 관점)
   // ════════════════════════════════════════
   {
-    type: 'llmNode',
+    type: 'llm',
     label: '🧮 회계사 AI',
     icon: Bot,
     color: 'bg-gradient-to-r from-slate-600 to-slate-800',
@@ -532,7 +532,7 @@ const nodeTemplates = [
     }),
   },
   {
-    type: 'llmNode',
+    type: 'llm',
     label: '🏦 IB 전문가 AI',
     icon: Bot,
     color: 'bg-gradient-to-r from-amber-600 to-yellow-500',
@@ -585,7 +585,7 @@ const nodeTemplates = [
     }),
   },
   {
-    type: 'llmNode',
+    type: 'llm',
     label: '🎯 맥킨지 AI',
     icon: Bot,
     color: 'bg-gradient-to-r from-blue-600 to-cyan-500',
@@ -644,7 +644,7 @@ const nodeTemplates = [
     }),
   },
   {
-    type: 'llmNode',
+    type: 'llm',
     label: '📊 기획자 AI',
     icon: Bot,
     color: 'bg-gradient-to-r from-purple-600 to-pink-500',
@@ -701,7 +701,7 @@ const nodeTemplates = [
     }),
   },
   {
-    type: 'llmNode',
+    type: 'llm',
     label: '🦥 조과장 AI',
     icon: Bot,
     color: 'bg-gradient-to-r from-green-500 to-emerald-600',

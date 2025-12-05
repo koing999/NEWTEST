@@ -26,7 +26,7 @@ export const workflowTemplates: Record<TemplateType, WorkflowTemplate> = {
     nodes: [
       {
         id: 'input-1',
-        type: 'inputNode',
+        type: 'input',
         position: { x: 50, y: 250 },
         data: {
           type: 'input',
@@ -38,7 +38,7 @@ export const workflowTemplates: Record<TemplateType, WorkflowTemplate> = {
       },
       {
         id: 'api-dart',
-        type: 'apiNode',
+        type: 'api',
         position: { x: 300, y: 250 },
         data: {
           type: 'api',
@@ -54,7 +54,7 @@ export const workflowTemplates: Record<TemplateType, WorkflowTemplate> = {
       },
       {
         id: 'transform-csv',
-        type: 'transformNode',
+        type: 'transform',
         position: { x: 550, y: 250 },
         data: {
           type: 'transform',
@@ -65,7 +65,7 @@ export const workflowTemplates: Record<TemplateType, WorkflowTemplate> = {
       },
       {
         id: 'slice-csv',
-        type: 'sliceNode',
+        type: 'slice',
         position: { x: 800, y: 250 },
         data: {
           type: 'slice',
@@ -77,7 +77,7 @@ export const workflowTemplates: Record<TemplateType, WorkflowTemplate> = {
       },
       {
         id: 'llm-accountant',
-        type: 'llmNode',
+        type: 'llm',
         position: { x: 1050, y: 250 },
         data: {
           type: 'llm',
@@ -97,7 +97,7 @@ export const workflowTemplates: Record<TemplateType, WorkflowTemplate> = {
       },
       {
         id: 'output-1',
-        type: 'outputNode',
+        type: 'output',
         position: { x: 1300, y: 250 },
         data: {
           type: 'output',
@@ -107,7 +107,7 @@ export const workflowTemplates: Record<TemplateType, WorkflowTemplate> = {
       },
       {
         id: 'output-table',
-        type: 'tableOutputNode',
+        type: 'tableoutput',
         position: { x: 800, y: 450 },
         data: {
           type: 'tableoutput',
@@ -136,7 +136,7 @@ export const workflowTemplates: Record<TemplateType, WorkflowTemplate> = {
     nodes: [
       {
         id: 'input-1',
-        type: 'inputNode',
+        type: 'input',
         position: { x: 50, y: 350 },
         data: {
           type: 'input',
@@ -148,7 +148,7 @@ export const workflowTemplates: Record<TemplateType, WorkflowTemplate> = {
       },
       {
         id: 'api-dart',
-        type: 'apiNode',
+        type: 'api',
         position: { x: 300, y: 350 },
         data: {
           type: 'api',
@@ -164,7 +164,7 @@ export const workflowTemplates: Record<TemplateType, WorkflowTemplate> = {
       },
       {
         id: 'transform-csv',
-        type: 'transformNode',
+        type: 'transform',
         position: { x: 550, y: 350 },
         data: {
           type: 'transform',
@@ -175,7 +175,7 @@ export const workflowTemplates: Record<TemplateType, WorkflowTemplate> = {
       },
       {
         id: 'slice-csv',
-        type: 'sliceNode',
+        type: 'slice',
         position: { x: 800, y: 350 },
         data: {
           type: 'slice',
@@ -188,7 +188,7 @@ export const workflowTemplates: Record<TemplateType, WorkflowTemplate> = {
       // 1. 회계사 (첫 번째 실행)
       {
         id: 'llm-accountant',
-        type: 'llmNode',
+        type: 'llm',
         position: { x: 1100, y: 100 },
         data: {
           type: 'llm',
@@ -207,7 +207,7 @@ export const workflowTemplates: Record<TemplateType, WorkflowTemplate> = {
       // 2. IB (회계사 완료 후 실행 - 딜레이 효과)
       {
         id: 'llm-ib',
-        type: 'llmNode',
+        type: 'llm',
         position: { x: 1100, y: 350 },
         data: {
           type: 'llm',
@@ -225,7 +225,7 @@ export const workflowTemplates: Record<TemplateType, WorkflowTemplate> = {
       // 3. 조과장 (IB 완료 후 실행)
       {
         id: 'llm-jogwajang',
-        type: 'llmNode',
+        type: 'llm',
         position: { x: 1100, y: 600 },
         data: {
           type: 'llm',
@@ -243,19 +243,19 @@ export const workflowTemplates: Record<TemplateType, WorkflowTemplate> = {
       // 출력 노드들
       {
         id: 'output-accountant',
-        type: 'outputNode',
+        type: 'output',
         position: { x: 1350, y: 100 },
         data: { type: 'output', label: '회계사 의견', outputType: 'text' },
       },
       {
         id: 'output-ib',
-        type: 'outputNode',
+        type: 'output',
         position: { x: 1350, y: 350 },
         data: { type: 'output', label: 'IB 의견', outputType: 'text' },
       },
       {
         id: 'output-jogwajang',
-        type: 'outputNode',
+        type: 'output',
         position: { x: 1350, y: 600 },
         data: { type: 'output', label: '조과장 요약', outputType: 'text' },
       },

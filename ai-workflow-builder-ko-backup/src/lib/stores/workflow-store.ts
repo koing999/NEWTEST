@@ -75,7 +75,7 @@ interface WorkflowState {
 const createDefaultNodes = (): Node<WorkflowNodeData>[] => [
   {
     id: 'input-1',
-    type: 'inputNode',
+    type: 'input',
     position: { x: 100, y: 200 },
     data: {
       type: 'input',
@@ -87,7 +87,7 @@ const createDefaultNodes = (): Node<WorkflowNodeData>[] => [
   },
   {
     id: 'llm-1',
-    type: 'llmNode',
+    type: 'llm',
     position: { x: 400, y: 200 },
     data: {
       type: 'llm',
@@ -110,7 +110,7 @@ const createDefaultNodes = (): Node<WorkflowNodeData>[] => [
   },
   {
     id: 'output-1',
-    type: 'outputNode',
+    type: 'output',
     position: { x: 700, y: 200 },
     data: {
       type: 'output',
