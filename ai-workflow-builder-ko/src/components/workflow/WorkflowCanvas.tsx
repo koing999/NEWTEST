@@ -11,6 +11,7 @@ import ReactFlow, {
 import 'reactflow/dist/style.css';
 
 import { useWorkflowStore } from '@/lib/stores/workflow-store';
+import { createSafeId } from '@/utils/id';
 import InputNode from './InputNode';
 import LLMNode from './LLMNode';
 import TransformNode from './TransformNode';
@@ -110,7 +111,7 @@ function WorkflowCanvasInner() {
       });
 
       const newNode = {
-        id: `${type.replace('Node', '')}-${Date.now()}`,
+        id: createSafeId(type.replace('Node', '')),
         type,
         position,
         data: nodeData,

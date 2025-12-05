@@ -27,6 +27,7 @@ import {
   LLMProvider,
   LLMModel,
 } from '@/types/workflow';
+import { createSafeId } from '@/utils/id';
 
 // ============================================
 // 스토어 인터페이스
@@ -121,7 +122,7 @@ const createDefaultEdges = (): Edge[] => [
 // ============================================
 
 export const useWorkflowStore = create<WorkflowState>((set, get) => ({
-  workflowId: `workflow-${Date.now()}`,
+  workflowId: createSafeId('workflow'),
   workflowName: '새 워크플로우',
   nodes: createDefaultNodes(),
   edges: createDefaultEdges(),
@@ -212,7 +213,7 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
     try {
       const data = JSON.parse(json);
       set({
-        workflowId: data.id || `workflow-${Date.now()}`,
+        workflowId: data.id || createSafeId('workflow'),
         workflowName: data.name || '불러온 워크플로우',
         nodes: data.nodes || [],
         edges: data.edges || [],
@@ -228,7 +229,7 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
 
   clearWorkflow: () => {
     set({
-      workflowId: `workflow-${Date.now()}`,
+      workflowId: createSafeId('workflow'),
       workflowName: '새 워크플로우',
       nodes: createDefaultNodes(),
       edges: createDefaultEdges(),
